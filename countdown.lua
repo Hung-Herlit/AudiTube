@@ -32,7 +32,7 @@ local timeLabel = Instance.new("TextLabel", main)
 timeLabel.Position = UDim2.new(0.5, -50, 0, 60)  
 timeLabel.Size = UDim2.new(0, 100, 0, 25) 
 timeLabel.BackgroundTransparency = 1
-timeLabel.Text = "Time: 3450s"
+timeLabel.Text = "Time: 8880s"
 timeLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 timeLabel.Font = Enum.Font.Gotham
 timeLabel.TextSize = 16  
@@ -61,7 +61,7 @@ Instance.new("UICorner", knob).CornerRadius = UDim.new(1, 0)
 local credit = Instance.new("TextLabel", main)
 credit.Size = UDim2.new(1, -10, 0, 15)
 credit.Position = UDim2.new(0, 5, 1, -15)  
-credit.Text = "made by: vxq"
+credit.Text = "made by: kudo"
 credit.Font = Enum.Font.Gotham
 credit.TextColor3 = Color3.fromRGB(100, 100, 100)
 credit.TextSize = 10  -- Reduced text size
@@ -70,7 +70,7 @@ credit.TextXAlignment = Enum.TextXAlignment.Right
 
 
 local running = false
-local selectedTime = 3450  -- change if you want
+local selectedTime = 8880  -- change if you want
 
 local function updateSliderPosition(timeLeft)
     local percentLeft = timeLeft / selectedTime
