@@ -17,7 +17,7 @@ local function logButton(button)
     else
         -- fallback nếu thiếu appendfile
         local content = readfile(logFile)
-        writefile(logFile, content .. line .. "\\n")
+        writefile(logFile, content .. line .. "\n")
     end
 end
 
