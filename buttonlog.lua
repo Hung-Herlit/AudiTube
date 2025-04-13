@@ -13,7 +13,7 @@ local function logButton(button)
     print(line)
 
     if appendfile then
-        appendfile(logFile, line .. "\\n")
+        appendfile(logFile, line .. "\n")
     else
         -- fallback nếu thiếu appendfile
         local content = readfile(logFile)
@@ -67,4 +67,3 @@ playerGui.DescendantAdded:Connect(function(obj)
     end
 end)
 
-print("[✅ Logger] Đang theo dõi các nút nhấn trong PlayerGui. Log lưu vào:", logFile)
