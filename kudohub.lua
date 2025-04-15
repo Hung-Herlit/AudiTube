@@ -1,4 +1,4 @@
--- KudoHub: Script kết hợp 3 chức năng theo dõi giá trị, nút nhấn, và remote call
+-- KudoHub: Script kết hợp theo dõi biến và remote, có blacklist remote
 
 -- Tạo thư mục nếu chưa có
 if not isfolder("KudoHub") then makefolder("KudoHub") end
@@ -47,55 +47,14 @@ for _, v in ipairs(player:GetDescendants()) do watchValue(v) end
 player.DescendantAdded:Connect(watchValue)
 
 ----------------------------------------
--- 📌 2. Theo dõi các nút nhấn trong GUI
-----------------------------------------
-local playerGui = player:WaitForChild("PlayerGui")
-local buttonLogFile = "KudoHub/ClickableButtonsLog.txt"
-if not isfile(buttonLogFile) then writefile(buttonLogFile, "") end
-
-local function logButton(button)
-    local line = "[Nút mới] " .. button:GetFullName()
-    print(line)
-    if appendfile then
-        appendfile(buttonLogFile, line .. "\n")
-    else
-        local content = readfile(buttonLogFile)
-        writefile(buttonLogFile, content .. line .. "\n")
-    end
-end
-
-local clickableTypes = { "TextButton", "ImageButton" }
-
-local function isClickableButton(obj)
-    for _, t in ipairs(clickableTypes) do
-        if obj:IsA(t) and obj.Visible and obj.Active then return true end
-    end
-    return false
-end
-
-local function watchProperties(btn)
-    if btn:IsA("GuiButton") then
-        local function check()
-            if isClickableButton(btn) then logButton(btn) end
-        end
-        btn:GetPropertyChangedSignal("Visible"):Connect(check)
-        btn:GetPropertyChangedSignal("Active"):Connect(check)
-        check()
-    end
-end
-
-for _, obj in ipairs(playerGui:GetDescendants()) do
-    if obj:IsA("GuiButton") then watchProperties(obj) end
-end
-
-playerGui.DescendantAdded:Connect(function(obj)
-    if obj:IsA("GuiButton") then watchProperties(obj) end
-end)
-
-----------------------------------------
--- 📌 3. Theo dõi Remote Call và log lại
+-- 📌 2. Theo dõi Remote Call và log lại (có blacklist)
 ----------------------------------------
 if hookfunction and getrawmetatable and writefile and isfile and makefolder and isfolder then
+    local blacklist = {
+        ["GetSpecificPlayerDat"] = true,
+        ["ChangeState"] = true
+    }
+
     local function valToString(v)
         if typeof(v) == "string" then
             return string.format("%q", v)
@@ -139,7 +98,7 @@ if hookfunction and getrawmetatable and writefile and isfile and makefolder and 
     mt.__namecall = newcclosure(function(self, ...)
         local method = getnamecallmethod()
         local args = {...}
-        if method == "FireServer" or method == "InvokeServer" then
+        if (method == "FireServer" or method == "InvokeServer") and not blacklist[self.Name] then
             local remoteStr = 'game.' .. self:GetFullName() .. ':' .. method
             local script = argsToScript(remoteStr, args)
             saveRemoteToFile(self.Name, args, script)
@@ -153,4 +112,4 @@ else
 end
 
 ----------------------------------------
-print("[✅ KudoHub] Theo dõi biến | nút nhấn | remote đã kích hoạt!")
+print("[✅ KudoHub] Theo dõi biến + remote call (đã có blacklist) đã kích hoạt!")
