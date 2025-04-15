@@ -1,20 +1,12 @@
--- KudoHub: Script kết hợp theo dõi biến và remote, có blacklist remote
+-- KudoHub: Script chỉ theo dõi RemoteEvent/RemoteFunction và in ra console
+-- Không ghi file, chỉ print ra các remote được gọi (trừ những cái trong blacklist)
 
--- Tạo thư mục nếu chưa có
-if not isfolder("KudoHub") then makefolder("KudoHub") end
-if not isfolder("KudoHub/RemoteLogs") then makefolder("KudoHub/RemoteLogs") end
+local blacklist = {
+    ["GetSpecificPlayerDat"] = true,
+    ["ChangeState"] = true
+}
 
-----------------------------------------
--- 📌 1. Theo dõi mọi biến Value thay đổi
-----------------------------------------
-local player = game.Players.LocalPlayer
-
-if hookfunction and getrawmetatable and writefile and isfile and makefolder and isfolder then
-    local blacklist = {
-        ["GetSpecificPlayerDat"] = true,
-        ["ChangeState"] = true
-    }
-
+if hookfunction and getrawmetatable then
     local function valToString(v)
         if typeof(v) == "string" then
             return string.format("%q", v)
@@ -25,30 +17,12 @@ if hookfunction and getrawmetatable and writefile and isfile and makefolder and 
         end
     end
 
-    local function argsToScript(remote, args)
-        local lines = { "local args = {" }
+    local function argsToString(args)
+        local list = {}
         for i, v in ipairs(args) do
-            table.insert(lines, string.format("    [%d] = %s,", i, valToString(v)))
+            table.insert(list, string.format("[%d] = %s", i, valToString(v)))
         end
-        table.insert(lines, "}")
-        table.insert(lines, remote .. "(unpack(args))")
-        return table.concat(lines, "\n")
-    end
-
-    local function saveRemoteToFile(name, args, script)
-        local function sanitize(str)
-            return tostring(str):gsub("[^%w]", "_"):sub(1, 20)
-        end
-        local parts = { sanitize(name) }
-        for _, v in ipairs(args) do table.insert(parts, sanitize(v)) end
-        local base = table.concat(parts, "_")
-        local i = 1
-        local file = "KudoHub/RemoteLogs/" .. base .. "_" .. i .. ".lua"
-        while isfile(file) do
-            i += 1
-            file = "KudoHub/RemoteLogs/" .. base .. "_" .. i .. ".lua"
-        end
-        writefile(file, script)
+        return "{ " .. table.concat(list, ", ") .. " }"
     end
 
     local mt = getrawmetatable(game)
@@ -59,9 +33,8 @@ if hookfunction and getrawmetatable and writefile and isfile and makefolder and 
         local method = getnamecallmethod()
         local args = {...}
         if (method == "FireServer" or method == "InvokeServer") and not blacklist[self.Name] then
-            local remoteStr = 'game.' .. self:GetFullName() .. ':' .. method
-            local script = argsToScript(remoteStr, args)
-            saveRemoteToFile(self.Name, args, script)
+            print("[📡 Remote Call]", self:GetFullName(), ":" .. method)
+            print("   Args:", argsToString(args))
         end
         return oldNamecall(self, ...)
     end)
@@ -71,5 +44,4 @@ else
     warn("⚠️ Không thể hook remote: thiếu quyền hoặc chức năng.")
 end
 
-----------------------------------------
-print("[✅ KudoHub] Theo dõi biến + remote call (đã có blacklist) đã kích hoạt!")
+print("[✅ KudoHub] Đang theo dõi remote và in ra console (không ghi file).")
