@@ -264,9 +264,15 @@ local logs = {}
 --- The event currently selected.Log (defaults to nil)
 local selected = nil
 --- The blacklist (can be a string name or the Remote Instance)
-local blacklist = {["ChangeState"] = true}
+
+local blacklist = {["ChangeState"] = true,
+["GetSpecificPlayerData"] = true,
+["StateSubscription"] = true
+}
 --- The block list (can be a string name or the Remote Instance)
-local blocklist = {["ChangeState"] = true}
+local blocklist = {["ChangeState"] = true,
+["GetSpecificPlayerData"] = true,
+["StateSubscription"] = true}
 --- Whether or not to add getNil function
 local getNil = false
 --- Array of remotes (and original functions) connected to
