@@ -270,9 +270,7 @@ local blacklist = {["ChangeState"] = true,
 ["StateSubscription"] = true
 }
 --- The block list (can be a string name or the Remote Instance)
-local blocklist = {["ChangeState"] = true,
-["GetSpecificPlayerData"] = true,
-["StateSubscription"] = true}
+local blocklist = {}
 --- Whether or not to add getNil function
 local getNil = false
 --- Array of remotes (and original functions) connected to
