@@ -1,115 +1,103 @@
--- KudoHub: Script kết hợp theo dõi biến và remote, có blacklist remote
+local player_kudo = game:GetService("Players").LocalPlayer
+local replicatedStorage_kudo = game:GetService("ReplicatedStorage")
+local gui_kudo = Instance.new("ScreenGui", player_kudo:WaitForChild("PlayerGui"))
+gui_kudo.Name = "WaveToggleGUI_kudo"
+gui_kudo.ResetOnSpawn = false
 
--- Tạo thư mục nếu chưa có
-if not isfolder("KudoHub") then makefolder("KudoHub") end
-if not isfolder("KudoHub/RemoteLogs") then makefolder("KudoHub/RemoteLogs") end
+-- Toggle Button UI
+local toggle_kudo = Instance.new("TextButton")
+toggle_kudo.Size = UDim2.new(0, 160, 0, 40)
+toggle_kudo.Position = UDim2.new(0, 10, 0, 10)
+toggle_kudo.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+toggle_kudo.TextColor3 = Color3.new(1, 1, 1)
+toggle_kudo.Text = "▶️ Start Monitoring"
+toggle_kudo.Font = Enum.Font.GothamBold
+toggle_kudo.TextSize = 14
+toggle_kudo.Parent = gui_kudo
 
-----------------------------------------
--- 📌 1. Theo dõi mọi biến Value thay đổi
-----------------------------------------
-local player = game.Players.LocalPlayer
-local valueLogFile = "KudoHub/ValueChangesLog.txt"
-if not isfile(valueLogFile) then writefile(valueLogFile, "") end
+local toggle_corner_kudo = Instance.new("UICorner", toggle_kudo)
+toggle_corner_kudo.CornerRadius = UDim.new(0, 8)
 
-local valueTypes = {
-    "BoolValue", "IntValue", "StringValue", "NumberValue", "ObjectValue", "Vector3Value", "CFrameValue"
-}
+-- State variables
+local monitoring_kudo = false
+local lastWave_kudo = nil
+local wave99Count_kudo = 0
+local monitorThread_kudo = nil
 
-local function isValueObject(obj)
-    for _, t in ipairs(valueTypes) do
-        if obj:IsA(t) then return true end
-    end
-    return false
-end
+-- Monitoring logic
+local function startMonitoring_kudo()
+    print("[✅] Wave monitoring started.")
+    monitoring_kudo = true
+    toggle_kudo.Text = "⏸️ Stop Monitoring"
 
-local function appendValueLog(text)
-    if appendfile then
-        appendfile(valueLogFile, text .. "\n")
-    else
-        local current = readfile(valueLogFile)
-        writefile(valueLogFile, current .. text .. "\n")
-    end
-end
+    monitorThread_kudo = task.spawn(function()
+        while monitoring_kudo do
+            task.wait(2)
 
-local function watchValue(obj)
-    if isValueObject(obj) then
-        local path = obj:GetFullName()
-        appendValueLog("[Theo dõi] " .. path .. " = " .. tostring(obj.Value))
-        obj.Changed:Connect(function()
-            local line = "[Thay đổi] " .. path .. " => " .. tostring(obj.Value)
-            print(line)
-            appendValueLog(line)
-        end)
-    end
-end
+            local waveLabel_kudo
+            pcall(function()
+                waveLabel_kudo = player_kudo.PlayerGui:FindFirstChild("MainUI", true)
+                    and player_kudo.PlayerGui.MainUI:FindFirstChild("Top", true)
+                    and player_kudo.PlayerGui.MainUI.Top:FindFirstChild("Wave", true)
+                    and player_kudo.PlayerGui.MainUI.Top.Wave:FindFirstChild("Value", true)
+            end)
 
-for _, v in ipairs(player:GetDescendants()) do watchValue(v) end
-player.DescendantAdded:Connect(watchValue)
+            if waveLabel_kudo and waveLabel_kudo:IsA("TextLabel") then
+                local text_kudo = waveLabel_kudo.Text
+                local waveNum_kudo = tonumber(text_kudo)
 
-----------------------------------------
--- 📌 2. Theo dõi Remote Call và log lại (có blacklist)
-----------------------------------------
-if hookfunction and getrawmetatable and writefile and isfile and makefolder and isfolder then
-    local blacklist = {
-        ["GetSpecificPlayerDat"] = true,
-        ["ChangeState"] = true
-    }
+                if waveNum_kudo then
+                    if waveNum_kudo ~= lastWave_kudo then
+                        lastWave_kudo = waveNum_kudo
+                        print("[🔁] New Wave:", waveNum_kudo)
 
-    local function valToString(v)
-        if typeof(v) == "string" then
-            return string.format("%q", v)
-        elseif typeof(v) == "Instance" then
-            return 'game.' .. v:GetFullName()
-        else
-            return tostring(v)
+                        if waveNum_kudo == 95 then
+                            print("[⚔️] Wave 95 reached! Sending Ability remote...")
+                            local args_kudo = {
+                                [1] = workspace:WaitForChild("Towers"):WaitForChild("GojoEvo2EZA"),
+                                [2] = 2
+                            }
+                            replicatedStorage_kudo:WaitForChild("Remotes"):WaitForChild("Ability"):InvokeServer(unpack(args_kudo))
+                        elseif waveNum_kudo == 99 then
+                            print("[🔥] Wave 99 reached! Sending SellAll remote...")
+                            replicatedStorage_kudo:WaitForChild("Remotes"):WaitForChild("UnitManager"):WaitForChild("SellAll"):FireServer()
+
+                            wave99Count_kudo += 1
+                            print("[📊] Wave 99 count:", wave99Count_kudo)
+
+                            if wave99Count_kudo >= 4 then
+                                print("[⏳] 4x Wave 99 reached. Waiting 30 seconds to RestartMatch...")
+                                task.delay(30, function()
+                                    print("[🔁] Sending RestartMatch remote.")
+                                    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("RestartMatch"):FireServer()
+                                end)
+                            end
+                        end
+                    end
+                else
+                    print("[❌] Cannot convert to number:", text_kudo)
+                end
+            else
+                print("[⏳] waveLabel_kudo not found.")
+            end
         end
-    end
-
-    local function argsToScript(remote, args)
-        local lines = { "local args = {" }
-        for i, v in ipairs(args) do
-            table.insert(lines, string.format("    [%d] = %s,", i, valToString(v)))
-        end
-        table.insert(lines, "}")
-        table.insert(lines, remote .. "(unpack(args))")
-        return table.concat(lines, "\n")
-    end
-
-    local function saveRemoteToFile(name, args, script)
-        local function sanitize(str)
-            return tostring(str):gsub("[^%w]", "_"):sub(1, 20)
-        end
-        local parts = { sanitize(name) }
-        for _, v in ipairs(args) do table.insert(parts, sanitize(v)) end
-        local base = table.concat(parts, "_")
-        local i = 1
-        local file = "KudoHub/RemoteLogs/" .. base .. "_" .. i .. ".lua"
-        while isfile(file) do
-            i += 1
-            file = "KudoHub/RemoteLogs/" .. base .. "_" .. i .. ".lua"
-        end
-        writefile(file, script)
-    end
-
-    local mt = getrawmetatable(game)
-    local oldNamecall = mt.__namecall
-    setreadonly(mt, false)
-
-    mt.__namecall = newcclosure(function(self, ...)
-        local method = getnamecallmethod()
-        local args = {...}
-        if (method == "FireServer" or method == "InvokeServer") and not blacklist[self.Name] then
-            local remoteStr = 'game.' .. self:GetFullName() .. ':' .. method
-            local script = argsToScript(remoteStr, args)
-            saveRemoteToFile(self.Name, args, script)
-        end
-        return oldNamecall(self, ...)
     end)
-
-    setreadonly(mt, true)
-else
-    warn("⚠️ Không thể hook remote: thiếu quyền hoặc chức năng.")
 end
 
-----------------------------------------
-print("[✅ KudoHub] Theo dõi biến + remote call (đã có blacklist) đã kích hoạt!")
+local function stopMonitoring_kudo()
+    print("[🛑] Wave monitoring stopped.")
+    monitoring_kudo = false
+    toggle_kudo.Text = "▶️ Start Monitoring"
+end
+
+-- Toggle behavior
+toggle_kudo.MouseButton1Click:Connect(function()
+    if monitoring_kudo then
+        stopMonitoring_kudo()
+    else
+        startMonitoring_kudo()
+    end
+end)
+
+-- Start monitoring by default
+startMonitoring_kudo()
