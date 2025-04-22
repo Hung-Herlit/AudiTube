@@ -67,7 +67,7 @@ local function startMonitoring_kudo()
 
                             if wave99Count_kudo >= 4 then
                                 print("[⏳] 4x Wave 99 reached. Waiting 30 seconds to RestartMatch...")
-                                task.delay(30, function()
+                                task.delay(60, function()
                                     print("[🔁] Sending RestartMatch remote.")
                                     game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("RestartMatch"):FireServer()
                                 end)
