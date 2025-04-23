@@ -51,19 +51,19 @@ local function startMonitoring_kudo()
                         lastWave_kudo = waveNum_kudo
                         print("[🔁] New Wave:", waveNum_kudo)
 
-                        if waveNum_kudo == 95 then
-                            print("[⚔️] Wave 95 reached! Sending Ability remote...")
+                        if waveNum_kudo == 99 then
+                            print("[⚔️] Wave 99 reached! Sending Ability remote...")
                             local args_kudo = {
                                 [1] = workspace:WaitForChild("Towers"):WaitForChild("GojoEvo2EZA"),
                                 [2] = 2
                             }
                             replicatedStorage_kudo:WaitForChild("Remotes"):WaitForChild("Ability"):InvokeServer(unpack(args_kudo))
-                        elseif waveNum_kudo == 99 then
-                            print("[🔥] Wave 99 reached! Sending SellAll remote...")
+                        elseif waveNum_kudo == 100 then
+                            print("[🔥] Wave 100 reached! Sending SellAll remote...")
                             replicatedStorage_kudo:WaitForChild("Remotes"):WaitForChild("UnitManager"):WaitForChild("SellAll"):FireServer()
 
                             wave99Count_kudo += 1
-                            print("[📊] Wave 99 count:", wave99Count_kudo)
+                            print("[📊] Wave 100 count:", wave99Count_kudo)
 
                             if wave99Count_kudo >= 5 then
                                 print("[⏳] 5x Wave 99 reached. Waiting 30 seconds to RestartMatch...")
