@@ -65,8 +65,8 @@ local function startMonitoring_kudo()
                             wave99Count_kudo += 1
                             print("[📊] Wave 100 count:", wave99Count_kudo)
 
-                            if wave99Count_kudo >= 5 then
-                                print("[⏳] 5x Wave 99 reached. Waiting 30 seconds to RestartMatch...")
+                            if wave99Count_kudo >= 4 then
+                                print("[⏳] 4x Wave 99 reached. Waiting 30 seconds to RestartMatch...")
                                 task.delay(60, function()
                                     print("[🔁] Sending RestartMatch remote.")
                                     game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("RestartMatch"):FireServer()
