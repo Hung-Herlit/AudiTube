@@ -12,7 +12,6 @@ main_kudo.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 main_kudo.BorderSizePixel = 0
 main_kudo.Active = true
 main_kudo.Draggable = true
-
 Instance.new("UICorner", main_kudo).CornerRadius = UDim.new(0, 8)
 
 -- Name TextBox
@@ -57,12 +56,24 @@ toggleButton_kudo.MouseButton1Click:Connect(function()
 	toggleButton_kudo.BackgroundColor3 = autoEnabled_kudo and Color3.fromRGB(40, 120, 40) or Color3.fromRGB(120, 40, 40)
 end)
 
--- Loop kiểm tra Boss + gửi remote
+-- Debug: in ra mỗi lần Enemies có child mới
+local enemiesFolder_kudo = workspace:FindFirstChild("Enemies")
+if enemiesFolder_kudo then
+	enemiesFolder_kudo.ChildAdded:Connect(function(newChild)
+		if newChild and newChild:IsA("Instance") then
+			print("[👾] New enemy detected:", newChild:GetFullName())
+		end
+	end)
+end
+
+-- Auto check + cast remote khi có Boss
 task.spawn(function()
 	while true do
 		task.wait(1)
 		if autoEnabled_kudo then
-			local boss_kudo = workspace:FindFirstChild("Enemies") and workspace.Enemies:FindFirstChild("Boss")
+			local enemies = workspace:FindFirstChild("Enemies")
+			local boss_kudo = enemies and enemies:FindFirstChild("Boss")
+
 			if boss_kudo then
 				local towerName = name_kudo.Text
 				local skillName = skill_kudo.Text
@@ -76,6 +87,8 @@ task.spawn(function()
 						}
 						game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Ability"):InvokeServer(unpack(args))
 						warn("[🌀] Sent Ability remote:", towerName, skillName)
+					else
+						warn("[❌] Tower not found:", towerName)
 					end
 				end
 			end
